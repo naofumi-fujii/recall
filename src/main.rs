@@ -144,6 +144,11 @@ struct MenuIds {
 fn create_tray_menu(history: &[ClipboardEntry]) -> (Menu, MenuIds) {
     let menu = Menu::new();
 
+    // バージョン表示
+    let version = env!("CARGO_PKG_VERSION");
+    let version_item = MenuItem::new(format!("Banzai v{}", version), false, None);
+    menu.append(&version_item).unwrap();
+
     // 履歴件数表示
     let status_item = MenuItem::new(format!("履歴: {} 件", history.len()), false, None);
     menu.append(&status_item).unwrap();
