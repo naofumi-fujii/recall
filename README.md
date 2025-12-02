@@ -1,36 +1,38 @@
 # banzai
 
-macOS メニューバー常駐型のクリップボード履歴監視ツール
+A macOS menu bar clipboard history manager.
 
-## 機能
+## Features
 
-- クリップボードの変更を自動検知・保存
-- メニューバーに常駐してバックグラウンド動作
-- 履歴をJSONL形式で永続化
+- Automatically detects and saves clipboard changes
+- Runs in the menu bar as a background application
+- Persists history in JSONL format
+- Removes duplicate entries (keeps the latest)
+- Clear history from menu
 
-## インストール
+## Installation
 
 ```bash
 cargo build --release
 ```
 
-## 使い方
+## Usage
 
 ```bash
 cargo run
 ```
 
-起動するとメニューバーにクリップボードアイコンが表示されます。
-コピーした内容は自動的に保存されます。
+After launching, a clipboard icon appears in the menu bar.
+Copied content is automatically saved to history.
 
-## 履歴の保存場所
+## History Location
 
 - macOS: `~/Library/Application Support/banzai/clipboard_history.jsonl`
 
-## 依存クレート
+## Dependencies
 
-- `arboard` - クリップボードアクセス
-- `chrono` - タイムスタンプ
-- `serde` / `serde_json` - シリアライズ
-- `dirs` - プラットフォーム固有のディレクトリ取得
-- `tao` / `tray-icon` - システムトレイ
+- `arboard` - Clipboard access
+- `chrono` - Timestamps
+- `serde` / `serde_json` - Serialization
+- `dirs` - Platform-specific directory paths
+- `tao` / `tray-icon` - System tray
