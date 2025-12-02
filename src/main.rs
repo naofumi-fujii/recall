@@ -1,13 +1,15 @@
 use arboard::Clipboard;
 use chrono::{DateTime, Local};
+use rdev::{listen, Event as RdevEvent, EventType, Key};
 use serde::{Deserialize, Serialize};
 use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tao::event::{Event, StartCause};
 use tao::event_loop::{ControlFlow, EventLoopBuilder};
 use tray_icon::menu::{Menu, MenuEvent, MenuItem};
@@ -97,6 +99,37 @@ fn create_icon() -> Icon {
     Icon::from_rgba(rgba, width, height).expect("Failed to create icon")
 }
 
+fn start_hotkey_listener(hotkey_sender: mpsc::Sender<()>) {
+    thread::spawn(move || {
+        let mut last_alt_release: Option<Instant> = None;
+        let double_tap_threshold = Duration::from_millis(400);
+
+        let callback = move |event: RdevEvent| {
+            // Altキー（左右両方）のリリースを検出
+            if let EventType::KeyRelease(key) = event.event_type {
+                if matches!(key, Key::Alt | Key::AltGr) {
+                    let now = Instant::now();
+
+                    if let Some(last_time) = last_alt_release {
+                        if now.duration_since(last_time) < double_tap_threshold {
+                            // ダブルタップ検出！
+                            println!("Alt double-tap detected!");
+                            let _ = hotkey_sender.send(());
+                            last_alt_release = None;
+                            return;
+                        }
+                    }
+                    last_alt_release = Some(now);
+                }
+            }
+        };
+
+        if let Err(e) = listen(callback) {
+            eprintln!("ホットキーリスナーエラー: {:?}", e);
+        }
+    });
+}
+
 fn start_clipboard_monitor(running: Arc<AtomicBool>) {
     thread::spawn(move || {
         let mut clipboard = match Clipboard::new() {
@@ -150,12 +183,17 @@ fn start_clipboard_monitor(running: Arc<AtomicBool>) {
 fn main() {
     println!("Banzai - Clipboard Monitor");
     println!("履歴保存先: {:?}", get_history_path());
+    println!("ショートカット: Altキー2回タップで起動");
     println!("メニューバーに常駐中...\n");
 
     let running = Arc::new(AtomicBool::new(true));
 
     // Start clipboard monitoring in background thread
     start_clipboard_monitor(running.clone());
+
+    // Start hotkey listener for Alt double-tap
+    let (hotkey_sender, hotkey_receiver) = mpsc::channel();
+    start_hotkey_listener(hotkey_sender);
 
     // Create event loop for tray icon
     let event_loop = EventLoopBuilder::new().build();
@@ -194,6 +232,22 @@ fn main() {
                 running.store(false, Ordering::Relaxed);
                 *control_flow = ControlFlow::Exit;
             }
+        }
+
+        // Handle hotkey events (Alt double-tap)
+        if let Ok(()) = hotkey_receiver.try_recv() {
+            println!("Hotkey activated! Showing clipboard history...");
+            let history = load_history();
+            println!("\n=== クリップボード履歴 (最新10件) ===");
+            for entry in history.iter().rev().take(10) {
+                let preview = if entry.content.len() > 60 {
+                    format!("{}...", &entry.content[..60])
+                } else {
+                    entry.content.clone()
+                };
+                println!("[{}] {}", entry.timestamp.format("%m/%d %H:%M:%S"), preview);
+            }
+            println!("=====================================\n");
         }
 
         // Small sleep to prevent busy loop
