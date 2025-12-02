@@ -327,7 +327,6 @@ fn start_hotkey_listener(hotkey_sender: mpsc::Sender<()>) {
                 if let Some(last_time) = last_alt_release {
                     if now.duration_since(last_time) < double_tap_threshold {
                         // ダブルタップ検出！
-                        println!("Alt double-tap detected!");
                         let _ = hotkey_sender.send(());
                         last_alt_release = None;
                         alt_was_pressed = false;
@@ -339,12 +338,12 @@ fn start_hotkey_listener(hotkey_sender: mpsc::Sender<()>) {
             }
 
             alt_was_pressed = alt_pressed;
-            thread::sleep(Duration::from_millis(10));
+            thread::sleep(Duration::from_millis(30));
         }
     });
 }
 
-fn start_clipboard_monitor(running: Arc<AtomicBool>) {
+fn start_clipboard_monitor(running: Arc<AtomicBool>, history_changed_sender: mpsc::Sender<()>) {
     thread::spawn(move || {
         let mut clipboard = match Clipboard::new() {
             Ok(c) => c,
@@ -369,18 +368,11 @@ fn start_clipboard_monitor(running: Arc<AtomicBool>) {
                             content: current.clone(),
                         };
 
-                        println!(
-                            "[{}] {}",
-                            entry.timestamp.format("%H:%M:%S"),
-                            if current.len() > 50 {
-                                format!("{}...", &current[..50])
-                            } else {
-                                current.clone()
-                            }
-                        );
-
                         if let Err(e) = save_entry(&entry) {
                             eprintln!("保存エラー: {}", e);
+                        } else {
+                            // 履歴変更を通知
+                            let _ = history_changed_sender.send(());
                         }
 
                         last_content = Some(current);
@@ -402,8 +394,11 @@ fn main() {
 
     let running = Arc::new(AtomicBool::new(true));
 
+    // 履歴変更通知用チャネル
+    let (history_changed_sender, history_changed_receiver) = mpsc::channel();
+
     // Start clipboard monitoring in background thread
-    start_clipboard_monitor(running.clone());
+    start_clipboard_monitor(running.clone(), history_changed_sender);
 
     // Start hotkey listener for Alt double-tap
     let (hotkey_sender, hotkey_receiver) = mpsc::channel();
@@ -417,8 +412,6 @@ fn main() {
     let history = load_history();
     let (tray_icon, mut quit_id, mut history_items) = rebuild_tray_icon(&history);
     let mut tray_icon: Option<TrayIcon> = Some(tray_icon);
-    let mut last_history_count = history.len();
-
     let menu_channel = MenuEvent::receiver();
 
     // ポップアップウィンドウ用の状態
@@ -426,7 +419,7 @@ fn main() {
     let mut popup_webview: Option<wry::WebView> = None;
 
     event_loop.run(move |event, event_loop_window_target, control_flow| {
-        *control_flow = ControlFlow::Poll;
+        *control_flow = ControlFlow::WaitUntil(Instant::now() + Duration::from_millis(500));
 
         if let Event::NewEvents(StartCause::Init) = event {
             // Tray icon is already created
@@ -467,8 +460,6 @@ fn main() {
                         if let Ok(mut clipboard) = Clipboard::new() {
                             if let Err(e) = clipboard.set_text(content.clone()) {
                                 eprintln!("クリップボードへのコピーに失敗: {}", e);
-                            } else {
-                                println!("コピーしました: {}", truncate_for_display(content, 50));
                             }
                         }
                         break;
@@ -477,21 +468,19 @@ fn main() {
             }
         }
 
-        // Periodically refresh menu when history changes
-        let current_history = load_history();
-        if current_history.len() != last_history_count {
+        // 履歴変更通知を受け取ったときだけメニューを更新
+        if let Ok(()) = history_changed_receiver.try_recv() {
+            let current_history = load_history();
             // Rebuild tray icon with updated menu
             tray_icon.take(); // Drop the old tray icon
             let result = rebuild_tray_icon(&current_history);
             tray_icon = Some(result.0);
             quit_id = result.1;
             history_items = result.2;
-            last_history_count = current_history.len();
         }
 
         // Handle hotkey events (Alt double-tap)
         if let Ok(()) = hotkey_receiver.try_recv() {
-            println!("Hotkey activated! Showing clipboard history popup...");
 
             // 既存のポップアップがあれば閉じる
             popup_webview.take();
@@ -553,8 +542,6 @@ fn main() {
                     if let Ok(mut clipboard) = Clipboard::new() {
                         if let Err(e) = clipboard.set_text(content.clone()) {
                             eprintln!("クリップボードへのコピーに失敗: {}", e);
-                        } else {
-                            println!("コピーしました: {}", truncate_for_display(content, 50));
                         }
                     }
                     // ウィンドウを閉じる
@@ -563,8 +550,5 @@ fn main() {
                 }
             }
         }
-
-        // Small sleep to prevent busy loop
-        thread::sleep(Duration::from_millis(100));
     });
 }
