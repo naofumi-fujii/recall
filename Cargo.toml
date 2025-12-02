@@ -1,0 +1,11 @@
+[package]
+name = "banzai"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+arboard = "3"
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "5"
