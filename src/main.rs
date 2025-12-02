@@ -110,7 +110,7 @@ fn create_tray_menu(history: &[ClipboardEntry]) -> (Menu, MenuIds) {
     for entry in history.iter().rev().take(10) {
         let display_text = format!(
             "[{}] {}",
-            entry.timestamp.format("%H:%M"),
+            entry.timestamp.format("%m/%d %H:%M:%S"),
             truncate_for_display(&entry.content, 40)
         );
         let item = MenuItem::new(&display_text, true, None);
