@@ -16,10 +16,28 @@ A macOS menu bar clipboard history manager.
 cargo build --release
 ```
 
+## Build App Bundle
+
+```bash
+cargo install cargo-bundle
+cargo bundle --release
+```
+
+The app bundle is created at `target/release/bundle/osx/Banzai.app`.
+
+To install to Applications:
+```bash
+cp -r target/release/bundle/osx/Banzai.app /Applications/
+```
+
 ## Usage
 
 ```bash
+# Run directly
 cargo run
+
+# Or open the app bundle
+open target/release/bundle/osx/Banzai.app
 ```
 
 After launching, a clipboard icon appears in the menu bar.

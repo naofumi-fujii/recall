@@ -8,8 +8,10 @@ name = "Banzai"
 identifier = "com.banzai.clipboard"
 icon = ["icon.png"]
 category = "Utility"
-# LSUIElement = true にすると Dock に表示されない（トレイアプリ向け）
-osx-minimum-system-version = "10.14"
+osx_minimum_system_version = "10.14"
+
+[package.metadata.bundle.macos]
+LSUIElement = true
 
 [dependencies]
 arboard = "3"
