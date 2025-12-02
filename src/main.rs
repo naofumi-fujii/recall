@@ -156,9 +156,9 @@ fn create_tray_menu(history: &[ClipboardEntry]) -> (Menu, MenuIds) {
     // 区切り線
     menu.append(&PredefinedMenuItem::separator()).unwrap();
 
-    // 最新10件の履歴をメニューに追加
+    // 履歴をメニューに追加
     let mut history_items: Vec<(tray_icon::menu::MenuId, String)> = Vec::new();
-    for entry in history.iter().rev().take(10) {
+    for entry in history.iter().rev() {
         let display_text = format!(
             "[{}] {}",
             entry.timestamp.format("%Y/%m/%d %H:%M:%S"),
