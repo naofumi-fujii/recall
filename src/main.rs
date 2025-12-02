@@ -27,7 +27,7 @@ fn get_history_path() -> PathBuf {
     data_dir.join("clipboard_history.jsonl")
 }
 
-const MAX_HISTORY_ENTRIES: usize = 200;
+const MAX_HISTORY_ENTRIES: usize = 100;
 
 fn save_entry(entry: &ClipboardEntry) -> std::io::Result<()> {
     let path = get_history_path();
