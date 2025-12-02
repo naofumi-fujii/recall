@@ -302,6 +302,13 @@ fn html_escape(s: &str) -> String {
         .replace('"', "&quot;")
 }
 
+// カスタムイベント（IPCからメインループへの通知用）
+#[derive(Debug, Clone)]
+enum UserEvent {
+    ClosePopup,
+    CopyAndClose(String),
+}
+
 fn start_hotkey_listener(hotkey_sender: mpsc::Sender<()>) {
     thread::spawn(move || {
         let mut last_alt_release: Option<Instant> = None;
@@ -398,8 +405,9 @@ fn main() {
     let (hotkey_sender, hotkey_receiver) = mpsc::channel();
     start_hotkey_listener(hotkey_sender);
 
-    // Create event loop for tray icon
-    let event_loop = EventLoopBuilder::new().build();
+    // Create event loop for tray icon (with custom UserEvent)
+    let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
+    let event_loop_proxy = event_loop.create_proxy();
 
     // Create tray icon with history menu
     let history = load_history();
@@ -504,27 +512,22 @@ fn main() {
             let html = generate_popup_html(&history);
 
             // WebViewを作成
+            let proxy = event_loop_proxy.clone();
             let webview = WebViewBuilder::new()
                 .with_html(&html)
                 .with_ipc_handler(move |message| {
                     let msg = message.body();
                     if msg == "close" {
-                        // ウィンドウを閉じるリクエスト（次のイベントループで処理）
-                        println!("Close requested");
+                        // ウィンドウを閉じるリクエスト
+                        let _ = proxy.send_event(UserEvent::ClosePopup);
                     } else if let Some(content) = msg.strip_prefix("copy:") {
-                        // コンテンツをクリップボードにコピー
+                        // コンテンツをクリップボードにコピー＆閉じる
                         let content = content
                             .replace("\\n", "\n")
                             .replace("\\r", "\r")
                             .replace("\\'", "'")
                             .replace("\\\\", "\\");
-                        if let Ok(mut clipboard) = Clipboard::new() {
-                            if let Err(e) = clipboard.set_text(content.clone()) {
-                                eprintln!("クリップボードへのコピーに失敗: {}", e);
-                            } else {
-                                println!("コピーしました: {}", truncate_for_display(&content, 50));
-                            }
-                        }
+                        let _ = proxy.send_event(UserEvent::CopyAndClose(content));
                     }
                 })
                 .build(&window)
@@ -532,6 +535,29 @@ fn main() {
 
             popup_window = Some(window);
             popup_webview = Some(webview);
+        }
+
+        // Handle custom UserEvent (from IPC handler)
+        if let Event::UserEvent(user_event) = &event {
+            match user_event {
+                UserEvent::ClosePopup => {
+                    popup_webview.take();
+                    popup_window.take();
+                }
+                UserEvent::CopyAndClose(content) => {
+                    // クリップボードにコピー
+                    if let Ok(mut clipboard) = Clipboard::new() {
+                        if let Err(e) = clipboard.set_text(content.clone()) {
+                            eprintln!("クリップボードへのコピーに失敗: {}", e);
+                        } else {
+                            println!("コピーしました: {}", truncate_for_display(content, 50));
+                        }
+                    }
+                    // ウィンドウを閉じる
+                    popup_webview.take();
+                    popup_window.take();
+                }
+            }
         }
 
         // Small sleep to prevent busy loop
