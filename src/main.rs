@@ -78,7 +78,8 @@ fn load_history() -> Vec<ClipboardEntry> {
 
 fn truncate_for_display(s: &str, max_len: usize) -> String {
     // 改行を除去して、指定長で切り詰め
-    let single_line: String = s.chars()
+    let single_line: String = s
+        .chars()
         .map(|c| if c == '\n' || c == '\r' { ' ' } else { c })
         .collect();
     if single_line.chars().count() > max_len {
@@ -132,7 +133,14 @@ fn create_tray_menu(history: &[ClipboardEntry]) -> (Menu, MenuIds) {
     let quit_id = quit_item.id().clone();
     menu.append(&quit_item).unwrap();
 
-    (menu, MenuIds { quit_id, clear_id, history_items })
+    (
+        menu,
+        MenuIds {
+            quit_id,
+            clear_id,
+            history_items,
+        },
+    )
 }
 
 fn rebuild_tray_icon(history: &[ClipboardEntry]) -> (TrayIcon, MenuIds) {
@@ -200,7 +208,6 @@ fn create_icon() -> Icon {
 
     Icon::from_rgba(rgba, width, height).expect("Failed to create icon")
 }
-
 
 fn start_clipboard_monitor(running: Arc<AtomicBool>, history_changed_sender: mpsc::Sender<()>) {
     thread::spawn(move || {
@@ -310,6 +317,5 @@ fn main() {
             tray_icon = Some(result.0);
             menu_ids = result.1;
         }
-
     });
 }
