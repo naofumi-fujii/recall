@@ -16,7 +16,7 @@ A macOS menu bar clipboard history manager built with Tauri 2.
 ## Installation
 
 ### Homebrew (recommended)
-- naofumi-fujii/homebrew-banzai: Homebrew Cask for Banzai - macOS clipboard history monitor https://github.com/naofumi-fujii/homebrew-banzai
+- https://github.com/naofumi-fujii/homebrew-banzai
 
 ```bash
 brew tap naofumi-fujii/banzai
