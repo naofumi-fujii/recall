@@ -1,0 +1,14 @@
+pre-commit:
+  parallel: true
+  commands:
+    typescript:
+      glob: "*.{ts,tsx}"
+      run: npx tsc --noEmit
+    rust-fmt:
+      glob: "*.rs"
+      root: "src-tauri/"
+      run: cargo fmt --check
+    rust-clippy:
+      glob: "*.rs"
+      root: "src-tauri/"
+      run: cargo clippy -- -D warnings
