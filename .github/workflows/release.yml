@@ -45,17 +45,16 @@ jobs:
 
       - name: Create universal binary
         run: |
-          mkdir -p target/release
           lipo -create \
             target/x86_64-apple-darwin/release/banzai \
             target/aarch64-apple-darwin/release/banzai \
-            -output target/release/banzai
+            -output /tmp/banzai-universal
 
       - name: Create app bundle
         run: cargo bundle --release
 
       - name: Replace with universal binary
-        run: cp target/release/banzai target/release/bundle/osx/Banzai.app/Contents/MacOS/banzai
+        run: cp /tmp/banzai-universal target/release/bundle/osx/Banzai.app/Contents/MacOS/banzai
 
       - name: Create zip archive
         run: |
