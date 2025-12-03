@@ -66,22 +66,3 @@ jobs:
         with:
           files: target/release/bundle/osx/Banzai-${{ github.ref_name }}.zip
           generate_release_notes: true
-
-      - name: Update Homebrew Cask
-        env:
-          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          SHA256=$(shasum -a 256 target/release/bundle/osx/Banzai-${{ github.ref_name }}.zip | cut -d' ' -f1)
-
-          git clone https://x-access-token:${GH_TOKEN}@github.com/naofumi-fujii/homebrew-banzai.git
-          cd homebrew-banzai
-
-          sed -i '' "s/^  version \".*\"/  version \"$VERSION\"/" Casks/banzai.rb
-          sed -i '' "s/^  sha256 \".*\"/  sha256 \"$SHA256\"/" Casks/banzai.rb
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Casks/banzai.rb
-          git commit -m "バージョンを${VERSION}に更新"
-          git push
