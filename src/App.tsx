@@ -154,13 +154,7 @@ function App() {
               className={`history-item ${copiedIndex === index ? "copied" : ""}`}
               onClick={() => handleCopy(entry.content, index)}
             >
-              <div className="history-timestamp">
-                {formatTimestamp(entry.timestamp)}
-              </div>
-              <div className="history-content">{entry.content}</div>
-              {copiedIndex === index && (
-                <div className="copied-badge">コピーしました</div>
-              )}
+              <span className="history-content">{entry.content}</span>
             </div>
           ))
         )}

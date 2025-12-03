@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "Banzai - Clipboard History",
-        "width": 400,
-        "height": 500,
+        "width": 500,
+        "height": 1400,
         "resizable": true,
         "fullscreen": false,
         "visible": false,
