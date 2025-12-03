@@ -8,10 +8,37 @@ interface ClipboardEntry {
   content: string;
 }
 
+type Theme = "system" | "light" | "dark";
+
+const themeLabels: Record<Theme, string> = {
+  system: "自動",
+  light: "ライト",
+  dark: "ダーク",
+};
+
 function App() {
   const [history, setHistory] = useState<ClipboardEntry[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [theme, setTheme] = useState<Theme>(() => {
+    return (localStorage.getItem("theme") as Theme) || "system";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("theme", theme);
+    if (theme === "system") {
+      document.body.removeAttribute("data-theme");
+    } else {
+      document.body.setAttribute("data-theme", theme);
+    }
+  }, [theme]);
+
+  const cycleTheme = () => {
+    const themes: Theme[] = ["system", "light", "dark"];
+    const currentIndex = themes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    setTheme(themes[nextIndex]);
+  };
 
   const loadHistory = async () => {
     try {
@@ -83,6 +110,9 @@ function App() {
       <header className="header">
         <h1>Banzai</h1>
         <p className="subtitle">Clipboard History</p>
+        <button className="theme-toggle" onClick={cycleTheme}>
+          {themeLabels[theme]}
+        </button>
       </header>
 
       <div className="search-container">

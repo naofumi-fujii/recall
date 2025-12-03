@@ -23,6 +23,7 @@ body {
   padding: 8px 0 16px;
   border-bottom: 1px solid #e5e5e5;
   margin-bottom: 16px;
+  position: relative;
 }
 
 .header h1 {
@@ -188,4 +189,208 @@ body {
 
 .history-list::-webkit-scrollbar-thumb:hover {
   background-color: #a8a8ad;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  position: absolute;
+  top: 8px;
+  right: 0;
+  background: none;
+  border: 1px solid #d2d2d7;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #86868b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theme-toggle:hover {
+  border-color: #0071e3;
+  color: #0071e3;
+}
+
+/* Dark mode - auto (follows system) */
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) {
+    background-color: #1c1c1e;
+    color: #f5f5f7;
+  }
+
+  body:not([data-theme="light"]) .header {
+    border-bottom-color: #38383a;
+  }
+
+  body:not([data-theme="light"]) .header h1 {
+    color: #f5f5f7;
+  }
+
+  body:not([data-theme="light"]) .subtitle {
+    color: #8e8e93;
+  }
+
+  body:not([data-theme="light"]) .search-input {
+    background-color: #2c2c2e;
+    border-color: #38383a;
+    color: #f5f5f7;
+  }
+
+  body:not([data-theme="light"]) .search-input::placeholder {
+    color: #8e8e93;
+  }
+
+  body:not([data-theme="light"]) .search-input:focus {
+    border-color: #0a84ff;
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+  }
+
+  body:not([data-theme="light"]) .clear-button:disabled {
+    background-color: #38383a;
+    color: #8e8e93;
+  }
+
+  body:not([data-theme="light"]) .history-count {
+    color: #8e8e93;
+  }
+
+  body:not([data-theme="light"]) .history-item {
+    background-color: #2c2c2e;
+    border-color: #38383a;
+  }
+
+  body:not([data-theme="light"]) .history-item:hover {
+    border-color: #0a84ff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  body:not([data-theme="light"]) .history-item.copied {
+    border-color: #30d158;
+    background-color: rgba(48, 209, 88, 0.1);
+  }
+
+  body:not([data-theme="light"]) .history-timestamp {
+    color: #8e8e93;
+  }
+
+  body:not([data-theme="light"]) .history-content {
+    color: #f5f5f7;
+  }
+
+  body:not([data-theme="light"]) .copied-badge {
+    background-color: #30d158;
+  }
+
+  body:not([data-theme="light"]) .empty-state {
+    color: #8e8e93;
+  }
+
+  body:not([data-theme="light"]) .history-list::-webkit-scrollbar-thumb {
+    background-color: #48484a;
+  }
+
+  body:not([data-theme="light"]) .history-list::-webkit-scrollbar-thumb:hover {
+    background-color: #636366;
+  }
+
+  body:not([data-theme="light"]) .theme-toggle {
+    border-color: #38383a;
+    color: #8e8e93;
+  }
+
+  body:not([data-theme="light"]) .theme-toggle:hover {
+    border-color: #0a84ff;
+    color: #0a84ff;
+  }
+}
+
+/* Dark mode - forced */
+body[data-theme="dark"] {
+  background-color: #1c1c1e;
+  color: #f5f5f7;
+}
+
+body[data-theme="dark"] .header {
+  border-bottom-color: #38383a;
+}
+
+body[data-theme="dark"] .header h1 {
+  color: #f5f5f7;
+}
+
+body[data-theme="dark"] .subtitle {
+  color: #8e8e93;
+}
+
+body[data-theme="dark"] .search-input {
+  background-color: #2c2c2e;
+  border-color: #38383a;
+  color: #f5f5f7;
+}
+
+body[data-theme="dark"] .search-input::placeholder {
+  color: #8e8e93;
+}
+
+body[data-theme="dark"] .search-input:focus {
+  border-color: #0a84ff;
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+}
+
+body[data-theme="dark"] .clear-button:disabled {
+  background-color: #38383a;
+  color: #8e8e93;
+}
+
+body[data-theme="dark"] .history-count {
+  color: #8e8e93;
+}
+
+body[data-theme="dark"] .history-item {
+  background-color: #2c2c2e;
+  border-color: #38383a;
+}
+
+body[data-theme="dark"] .history-item:hover {
+  border-color: #0a84ff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+body[data-theme="dark"] .history-item.copied {
+  border-color: #30d158;
+  background-color: rgba(48, 209, 88, 0.1);
+}
+
+body[data-theme="dark"] .history-timestamp {
+  color: #8e8e93;
+}
+
+body[data-theme="dark"] .history-content {
+  color: #f5f5f7;
+}
+
+body[data-theme="dark"] .copied-badge {
+  background-color: #30d158;
+}
+
+body[data-theme="dark"] .empty-state {
+  color: #8e8e93;
+}
+
+body[data-theme="dark"] .history-list::-webkit-scrollbar-thumb {
+  background-color: #48484a;
+}
+
+body[data-theme="dark"] .history-list::-webkit-scrollbar-thumb:hover {
+  background-color: #636366;
+}
+
+body[data-theme="dark"] .theme-toggle {
+  border-color: #38383a;
+  color: #8e8e93;
+}
+
+body[data-theme="dark"] .theme-toggle:hover {
+  border-color: #0a84ff;
+  color: #0a84ff;
 }
