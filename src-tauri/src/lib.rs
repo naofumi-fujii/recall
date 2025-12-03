@@ -576,10 +576,17 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                // Hide window instead of closing
-                let _ = window.hide();
-                api.prevent_close();
+            match event {
+                tauri::WindowEvent::CloseRequested { api, .. } => {
+                    // Hide window instead of closing
+                    let _ = window.hide();
+                    api.prevent_close();
+                }
+                tauri::WindowEvent::Focused(false) => {
+                    // Hide window when it loses focus (Spotlight-like behavior)
+                    let _ = window.hide();
+                }
+                _ => {}
             }
         })
         .run(tauri::generate_context!())
