@@ -7,7 +7,7 @@
 #
 # 使い方:
 #   ./scripts/update-cask.sh          # 最新リリースで更新
-#   ./scripts/update-cask.sh v0.7.0   # 指定バージョンで更新
+#   ./scripts/update-cask.sh 0.7.0    # 指定バージョンで更新
 #
 set -e
 
@@ -17,18 +17,19 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
   echo "Homebrew Caskファイルを更新"
   echo ""
   echo "引数:"
-  echo "  VERSION    バージョン (省略時は最新リリース)"
+  echo "  VERSION    バージョン番号 (例: 0.7.0、省略時は最新リリース)"
   exit 0
 fi
 
 # バージョン取得
 if [ -n "$1" ]; then
-  TAG="$1"
+  VERSION="$1"
 else
   TAG=$(gh release list --limit=1 --json tagName --jq '.[0].tagName')
+  VERSION="${TAG#v}"
 fi
 
-VERSION="${TAG#v}"
+TAG="v$VERSION"
 echo "Updating Cask to $TAG..."
 
 RELEASE_URL="https://github.com/naofumi-fujii/banzai/releases/download/$TAG/Banzai-$TAG.zip"
