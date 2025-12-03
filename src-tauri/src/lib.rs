@@ -29,7 +29,7 @@ pub struct ClipboardEntry {
 
 const MAX_HISTORY_ENTRIES: usize = 100;
 const DOUBLE_TAP_THRESHOLD_MS: u128 = 400;
-const DOUBLE_TAP_COOLDOWN_MS: u128 = 500;
+const DOUBLE_TAP_COOLDOWN_MS: u128 = 0;
 
 fn get_data_dir() -> PathBuf {
     let data_dir = dirs::data_local_dir()
@@ -256,13 +256,10 @@ fn start_clipboard_monitor(app_handle: AppHandle, running: Arc<AtomicBool>) {
     });
 }
 
-fn toggle_window_at_mouse(app_handle: &AppHandle) {
+fn show_window_at_mouse(app_handle: &AppHandle) {
     if let Some(window) = app_handle.get_webview_window("main") {
-        // If window is visible, hide it
-        if window.is_visible().unwrap_or(false) {
-            let _ = window.hide();
-            return;
-        }
+        // Hide first to ensure re-show works
+        let _ = window.hide();
 
         // Get the current mouse position using AppleScript (macOS)
         #[cfg(target_os = "macos")]
@@ -361,7 +358,7 @@ fn start_hotkey_listener(app_handle: AppHandle) {
                             // Double tap detected!
                             println!("[Banzai] Option double tap detected! Toggling window...");
                             if let Some(ref handle) = *APP_HANDLE.lock().unwrap() {
-                                let _ = handle.emit("toggle-window-at-mouse", ());
+                                let _ = handle.emit("show-window-at-mouse", ());
                             }
                             *last_release = None;
                             *last_trigger = Some(now);
@@ -373,13 +370,60 @@ fn start_hotkey_listener(app_handle: AppHandle) {
             });
             let block = block.copy();
 
+            // Global monitor for when other apps are focused
             let _: id = msg_send![
                 class!(NSEvent),
                 addGlobalMonitorForEventsMatchingMask: NS_EVENT_MASK_FLAGS_CHANGED
                 handler: &*block
             ];
 
-            println!("[Banzai] NSEvent global monitor registered");
+            // Local monitor for when our app is focused
+            let local_block = block::ConcreteBlock::new(move |event: id| -> id {
+                let modifier_flags: u64 = msg_send![event, modifierFlags];
+                let option_pressed = (modifier_flags & NS_EVENT_MODIFIER_FLAG_OPTION) != 0;
+
+                let mut was_pressed = OPTION_WAS_PRESSED.lock().unwrap();
+                let mut last_release = LAST_OPTION_RELEASE.lock().unwrap();
+                let mut last_trigger = LAST_TRIGGER.lock().unwrap();
+
+                if option_pressed {
+                    *was_pressed = true;
+                } else if *was_pressed {
+                    *was_pressed = false;
+                    let now = Instant::now();
+
+                    if let Some(last_trig) = *last_trigger {
+                        if now.duration_since(last_trig).as_millis() < DOUBLE_TAP_COOLDOWN_MS {
+                            *last_release = None;
+                            return event;
+                        }
+                    }
+
+                    if let Some(last) = *last_release {
+                        let elapsed = now.duration_since(last).as_millis();
+                        if elapsed < DOUBLE_TAP_THRESHOLD_MS {
+                            println!("[Banzai] Option double tap detected (local)!");
+                            if let Some(ref handle) = *APP_HANDLE.lock().unwrap() {
+                                let _ = handle.emit("show-window-at-mouse", ());
+                            }
+                            *last_release = None;
+                            *last_trigger = Some(now);
+                            return event;
+                        }
+                    }
+                    *last_release = Some(now);
+                }
+                event
+            });
+            let local_block = local_block.copy();
+
+            let _: id = msg_send![
+                class!(NSEvent),
+                addLocalMonitorForEventsMatchingMask: NS_EVENT_MASK_FLAGS_CHANGED
+                handler: &*local_block
+            ];
+
+            println!("[Banzai] NSEvent global and local monitors registered");
 
             // Keep the thread alive and run the event loop
             let run_loop: id = msg_send![class!(NSRunLoop), currentRunLoop];
@@ -519,10 +563,10 @@ pub fn run() {
             // Start hotkey listener for Option key double-tap
             start_hotkey_listener(app.handle().clone());
 
-            // Listen for toggle-window-at-mouse event from hotkey listener
+            // Listen for show-window-at-mouse event from hotkey listener
             let app_handle = app.handle().clone();
-            app.listen("toggle-window-at-mouse", move |_| {
-                toggle_window_at_mouse(&app_handle);
+            app.listen("show-window-at-mouse", move |_| {
+                show_window_at_mouse(&app_handle);
             });
 
             Ok(())
