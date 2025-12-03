@@ -17,25 +17,23 @@
 set -e
 
 usage() {
-  echo "Usage: $0 [VERSION]"
+  echo "Usage: $0 VERSION"
   echo ""
   echo "Banzaiのリリーススクリプト"
   echo ""
   echo "引数:"
   echo "  VERSION    新しいバージョン番号 (例: 0.4.0)"
-  echo "             省略時はCargo.tomlの現在のバージョンを使用"
   echo ""
   echo "例:"
-  echo "  $0          # Cargo.tomlの現在のバージョンでリリース"
   echo "  $0 0.4.0    # バージョンを0.4.0に更新してリリース"
   exit 0
 }
 
-if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+if [ -z "$1" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
   usage
 fi
 
-# 引数でバージョンが指定された場合、Cargo.tomlを更新
+# Cargo.tomlのバージョンを更新
 if [ -n "$1" ]; then
   NEW_VERSION="$1"
   echo "Updating version to $NEW_VERSION..."
