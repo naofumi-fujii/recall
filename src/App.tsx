@@ -143,6 +143,7 @@ function App() {
               onClick={() => handleCopy(entry.content, index)}
             >
               <span className="history-content">{entry.content}</span>
+              <div className="history-tooltip">{entry.content}</div>
             </div>
           ))
         )}
