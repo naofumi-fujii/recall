@@ -168,8 +168,13 @@ fn create_tray_menu(
 ) -> tauri::Result<Menu<tauri::Wry>> {
     let version = env!("CARGO_PKG_VERSION");
 
-    let version_item =
-        MenuItem::with_id(app, "version", format!("Banzai v{}", version), false, None::<&str>)?;
+    let version_item = MenuItem::with_id(
+        app,
+        "version",
+        format!("Banzai v{}", version),
+        false,
+        None::<&str>,
+    )?;
     let separator1 = PredefinedMenuItem::separator(app)?;
 
     let auto_launch_enabled = is_auto_launch_enabled();
@@ -181,7 +186,13 @@ fn create_tray_menu(
         auto_launch_enabled,
         None::<&str>,
     )?;
-    let clear = MenuItem::with_id(app, "clear", "履歴をクリア", !history.is_empty(), None::<&str>)?;
+    let clear = MenuItem::with_id(
+        app,
+        "clear",
+        "履歴をクリア",
+        !history.is_empty(),
+        None::<&str>,
+    )?;
     let separator2 = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, "quit", "終了", true, None::<&str>)?;
 
