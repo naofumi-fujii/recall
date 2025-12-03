@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 interface ClipboardEntry {
   timestamp: string;
@@ -42,6 +43,8 @@ function App() {
     try {
       await invoke("copy_to_clipboard", { content });
       setCopiedIndex(index);
+      // Close window after copy
+      await getCurrentWindow().hide();
       setTimeout(() => setCopiedIndex(null), 1500);
     } catch (error) {
       console.error("Failed to copy:", error);
