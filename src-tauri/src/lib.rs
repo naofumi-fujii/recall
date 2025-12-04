@@ -401,6 +401,16 @@ pub fn run() {
                 _ => {}
             }
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if let tauri::RunEvent::Reopen { .. } = event {
+                // Dock icon clicked
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.center();
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
+        });
 }
