@@ -31,10 +31,17 @@ cd src-tauri && cargo test            # Run Rust tests
 ```
 
 ### Release
+GitHub Actions → "Release" workflow → "Run workflow" → バージョンを入力して実行
+
+ローカルでのデバッグ:
 ```bash
-npx tsx scripts/release.ts            # Interactive release CLI
+./scripts/release.sh 0.12.0   # バージョン更新 & タグ作成
 ```
-Updates version in: `src-tauri/Cargo.toml`, `package.json`, `src-tauri/tauri.conf.json`
+
+自動的に以下を行う:
+- `src-tauri/Cargo.toml`, `package.json`, `src-tauri/tauri.conf.json` のバージョン更新
+- コミット & タグ作成
+- ビルド & GitHubリリース作成
 
 ## Architecture
 

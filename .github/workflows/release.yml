@@ -1,9 +1,12 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New version (e.g., 0.12.0)'
+        required: true
+        type: string
 
 env:
   CARGO_TERM_COLOR: always
@@ -43,6 +46,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Update version and create tag
+        run: ./scripts/release.sh ${{ inputs.version }}
+
       - name: Build Tauri app (x86_64)
         run: npm run tauri build -- --target x86_64-apple-darwin
 
@@ -62,10 +68,11 @@ jobs:
       - name: Create zip archive
         run: |
           cd src-tauri/target/aarch64-apple-darwin/release/bundle/macos
-          zip -r Banzai-${{ github.ref_name }}.zip Banzai.app
+          zip -r Banzai-v${{ inputs.version }}.zip Banzai.app
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Banzai-${{ github.ref_name }}.zip
+          tag_name: v${{ inputs.version }}
+          files: src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Banzai-v${{ inputs.version }}.zip
           generate_release_notes: true
