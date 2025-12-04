@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { Monitor, Sun, Moon } from "lucide-react";
 
 interface ClipboardEntry {
   timestamp: string;
@@ -10,10 +11,16 @@ interface ClipboardEntry {
 
 type Theme = "system" | "light" | "dark";
 
-const themeLabels: Record<Theme, string> = {
-  system: "自動",
-  light: "ライト",
-  dark: "ダーク",
+const ThemeIcon = ({ theme }: { theme: Theme }) => {
+  const iconProps = { size: 16, strokeWidth: 2 };
+  switch (theme) {
+    case "system":
+      return <Monitor {...iconProps} />;
+    case "light":
+      return <Sun {...iconProps} />;
+    case "dark":
+      return <Moon {...iconProps} />;
+  }
 };
 
 function App() {
@@ -98,8 +105,8 @@ function App() {
       <header className="header">
         <h1>Banzai</h1>
         <p className="subtitle">Clipboard History</p>
-        <button className="theme-toggle" onClick={cycleTheme}>
-          {themeLabels[theme]}
+        <button className="theme-toggle" onClick={cycleTheme} title={theme}>
+          <ThemeIcon theme={theme} />
         </button>
       </header>
 
