@@ -42,14 +42,13 @@ fn get_history_path() -> PathBuf {
 }
 
 fn get_app_path() -> Option<String> {
-    std::env::current_exe().ok().map(|exe_path| {
-        let path_str = exe_path.to_string_lossy().to_string();
-        if let Some(pos) = path_str.find(".app/") {
-            path_str[..pos + 4].to_string()
-        } else {
-            path_str
-        }
-    })
+    // 常に/Applications/Banzai.appを使用（開発環境でdebugパスが登録されるのを防ぐ）
+    let app_path = "/Applications/Banzai.app";
+    if std::path::Path::new(app_path).exists() {
+        Some(app_path.to_string())
+    } else {
+        None
+    }
 }
 
 fn create_auto_launch() -> Option<auto_launch::AutoLaunch> {
