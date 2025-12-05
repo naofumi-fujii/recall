@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getVersion } from "@tauri-apps/api/app";
 import { Monitor, Sun, Moon } from "lucide-react";
 
 interface ClipboardEntry {
@@ -27,6 +28,7 @@ function App() {
   const [history, setHistory] = useState<ClipboardEntry[]>([]);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [autoLaunch, setAutoLaunch] = useState(false);
+  const [version, setVersion] = useState<string>("");
   const [theme, setTheme] = useState<Theme>(() => {
     return (localStorage.getItem("theme") as Theme) || "system";
   });
@@ -59,6 +61,7 @@ function App() {
   useEffect(() => {
     loadHistory();
     loadAutoLaunchStatus();
+    getVersion().then(setVersion);
 
     const unlistenChanged = listen<ClipboardEntry>("clipboard-changed", () => {
       loadHistory();
@@ -103,7 +106,7 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>Banzai</h1>
+        <h1>Banzai {version && <span className="version">v{version}</span>}</h1>
         <p className="subtitle">Clipboard History</p>
         <button className="theme-toggle" onClick={cycleTheme} title={theme}>
           <ThemeIcon theme={theme} />

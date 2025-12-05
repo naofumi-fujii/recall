@@ -34,6 +34,13 @@ body {
   color: #1d1d1f;
 }
 
+.header h1 .version {
+  font-size: 10px;
+  font-weight: 400;
+  color: #86868b;
+  margin-left: 4px;
+}
+
 .subtitle {
   display: none;
 }
@@ -269,6 +276,10 @@ body {
     color: #f5f5f7;
   }
 
+  body:not([data-theme="light"]) .header h1 .version {
+    color: #8e8e93;
+  }
+
   body:not([data-theme="light"]) .subtitle {
     color: #8e8e93;
   }
@@ -368,6 +379,10 @@ body[data-theme="dark"] .header {
 
 body[data-theme="dark"] .header h1 {
   color: #f5f5f7;
+}
+
+body[data-theme="dark"] .header h1 .version {
+  color: #8e8e93;
 }
 
 body[data-theme="dark"] .subtitle {
