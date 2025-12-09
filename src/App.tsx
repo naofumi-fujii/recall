@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -27,10 +27,13 @@ const ThemeIcon = ({ theme }: { theme: Theme }) => {
 function App() {
   const [history, setHistory] = useState<ClipboardEntry[]>([]);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [version, setVersion] = useState<string>("");
   const [theme, setTheme] = useState<Theme>(() => {
     return (localStorage.getItem("theme") as Theme) || "system";
   });
+  const listRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     localStorage.setItem("theme", theme);
@@ -57,12 +60,61 @@ function App() {
     }
   };
 
+  const scrollToSelected = useCallback((index: number) => {
+    const item = itemRefs.current[index];
+    if (item) {
+      item.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, []);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (history.length === 0) return;
+
+      switch (e.key) {
+        case "ArrowDown":
+        case "j":
+          e.preventDefault();
+          setSelectedIndex((prev) => {
+            const next = Math.min(prev + 1, history.length - 1);
+            scrollToSelected(next);
+            return next;
+          });
+          break;
+        case "ArrowUp":
+        case "k":
+          e.preventDefault();
+          setSelectedIndex((prev) => {
+            const next = Math.max(prev - 1, 0);
+            scrollToSelected(next);
+            return next;
+          });
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (history[selectedIndex]) {
+            handleCopy(history[selectedIndex].content, selectedIndex);
+          }
+          break;
+      }
+    },
+    [history, selectedIndex, scrollToSelected]
+  );
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleKeyDown]);
+
   useEffect(() => {
     loadHistory();
     getVersion().then(setVersion);
 
     const unlistenChanged = listen<ClipboardEntry>("clipboard-changed", () => {
       loadHistory();
+      setSelectedIndex(0);
     });
 
     return () => {
@@ -96,15 +148,19 @@ function App() {
         <span className="history-count">{history.length} 件</span>
       </div>
 
-      <div className="history-list">
+      <div className="history-list" ref={listRef}>
         {history.length === 0 ? (
           <div className="empty-state">履歴がありません</div>
         ) : (
           history.map((entry, index) => (
             <div
               key={`${entry.timestamp}-${index}`}
-              className={`history-item ${copiedIndex === index ? "copied" : ""}`}
+              ref={(el) => {
+                itemRefs.current[index] = el;
+              }}
+              className={`history-item ${copiedIndex === index ? "copied" : ""} ${selectedIndex === index ? "selected" : ""}`}
               onClick={() => handleCopy(entry.content, index)}
+              onMouseEnter={() => setSelectedIndex(index)}
             >
               <span className="history-content">{entry.content}</span>
               <div className="history-tooltip">{entry.content}</div>
