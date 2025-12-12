@@ -266,31 +266,6 @@ body {
   color: #0071e3;
 }
 
-/* Clear history button */
-.clear-history-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: 1px solid #ff3b30;
-  border-radius: 4px;
-  padding: 2px 6px;
-  color: #ff3b30;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.clear-history-button:hover:not(:disabled) {
-  background-color: #ff3b30;
-  color: #fff;
-}
-
-.clear-history-button:disabled {
-  border-color: #d2d2d7;
-  color: #d2d2d7;
-  cursor: not-allowed;
-}
-
 /* Dark mode - auto (follows system) */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) {
@@ -400,21 +375,6 @@ body {
   body:not([data-theme="light"]) .theme-toggle:hover {
     border-color: #0a84ff;
     color: #0a84ff;
-  }
-
-  body:not([data-theme="light"]) .clear-history-button {
-    border-color: #ff453a;
-    color: #ff453a;
-  }
-
-  body:not([data-theme="light"]) .clear-history-button:hover:not(:disabled) {
-    background-color: #ff453a;
-    color: #fff;
-  }
-
-  body:not([data-theme="light"]) .clear-history-button:disabled {
-    border-color: #38383a;
-    color: #38383a;
   }
 }
 
@@ -526,19 +486,4 @@ body[data-theme="dark"] .theme-toggle {
 body[data-theme="dark"] .theme-toggle:hover {
   border-color: #0a84ff;
   color: #0a84ff;
-}
-
-body[data-theme="dark"] .clear-history-button {
-  border-color: #ff453a;
-  color: #ff453a;
-}
-
-body[data-theme="dark"] .clear-history-button:hover:not(:disabled) {
-  background-color: #ff453a;
-  color: #fff;
-}
-
-body[data-theme="dark"] .clear-history-button:disabled {
-  border-color: #38383a;
-  color: #38383a;
 }
