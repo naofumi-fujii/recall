@@ -2,52 +2,67 @@
 # release.sh - バージョン更新スクリプト (CI用)
 #
 # 使い方:
-#   ./scripts/release.sh 0.12.0
+#   ./scripts/release.sh patch   # 0.12.0 -> 0.12.1
+#   ./scripts/release.sh minor   # 0.12.0 -> 0.13.0
+#   ./scripts/release.sh major   # 0.12.0 -> 1.0.0
 #
 # 処理内容:
-#   1. バージョン形式のバリデーション
-#   2. タグの重複チェック
-#   3. 現在バージョンとの比較
+#   1. bump typeのバリデーション
+#   2. 現在バージョンから新バージョンを計算
+#   3. タグの重複チェック
 #   4. 3ファイルのバージョン更新
 #   5. Cargo.lock更新
 #   6. コミット & タグ作成 & プッシュ
 
 set -euo pipefail
 
-VERSION="${1:-}"
+BUMP_TYPE="${1:-}"
 
-if [[ -z "$VERSION" ]]; then
-  echo "❌ バージョンを指定してください"
-  echo "使い方: ./scripts/release.sh 0.12.0"
+if [[ -z "$BUMP_TYPE" ]]; then
+  echo "❌ bump typeを指定してください"
+  echo "使い方: ./scripts/release.sh [major|minor|patch]"
   exit 1
 fi
 
-# バージョン形式のバリデーション
-if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "❌ 無効なバージョン形式です (例: 0.12.0)"
-  exit 1
-fi
-
-# タグの重複チェック
-TAG="v$VERSION"
-if git rev-parse "$TAG" >/dev/null 2>&1; then
-  echo "❌ タグ $TAG は既に存在します"
+# bump typeのバリデーション
+if [[ ! "$BUMP_TYPE" =~ ^(major|minor|patch)$ ]]; then
+  echo "❌ 無効なbump typeです (major, minor, patch のいずれかを指定)"
   exit 1
 fi
 
 # 現在のバージョンを取得
 CURRENT=$(grep '^version' src-tauri/Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
 echo "現在のバージョン: $CURRENT"
-echo "新しいバージョン: $VERSION"
 
-# バージョン比較
-IFS='.' read -r c1 c2 c3 <<< "$CURRENT"
-IFS='.' read -r n1 n2 n3 <<< "$VERSION"
+# バージョンを分解
+IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
 
-if [[ $n1 -lt $c1 ]] || \
-   [[ $n1 -eq $c1 && $n2 -lt $c2 ]] || \
-   [[ $n1 -eq $c1 && $n2 -eq $c2 && $n3 -le $c3 ]]; then
-  echo "❌ 新しいバージョン ($VERSION) は現在のバージョン ($CURRENT) より大きい必要があります"
+# 新バージョンを計算
+case "$BUMP_TYPE" in
+  major)
+    NEW_MAJOR=$((MAJOR + 1))
+    NEW_MINOR=0
+    NEW_PATCH=0
+    ;;
+  minor)
+    NEW_MAJOR=$MAJOR
+    NEW_MINOR=$((MINOR + 1))
+    NEW_PATCH=0
+    ;;
+  patch)
+    NEW_MAJOR=$MAJOR
+    NEW_MINOR=$MINOR
+    NEW_PATCH=$((PATCH + 1))
+    ;;
+esac
+
+VERSION="${NEW_MAJOR}.${NEW_MINOR}.${NEW_PATCH}"
+echo "新しいバージョン: $VERSION ($BUMP_TYPE)"
+
+# タグの重複チェック
+TAG="v$VERSION"
+if git rev-parse "$TAG" >/dev/null 2>&1; then
+  echo "❌ タグ $TAG は既に存在します"
   exit 1
 fi
 
@@ -85,3 +100,8 @@ git push origin "$TAG"
 
 echo ""
 echo "✅ バージョン更新完了: $TAG"
+
+# GitHub Actions の output にバージョンを出力
+if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+  echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+fi

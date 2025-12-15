@@ -31,11 +31,13 @@ cd src-tauri && cargo test            # Run Rust tests
 ```
 
 ### Release
-GitHub Actions → "Release" workflow → "Run workflow" → バージョンを入力して実行
+GitHub Actions → "Release" workflow → "Run workflow" → patch/minor/major を選択して実行
 
 ローカルでのデバッグ:
 ```bash
-./scripts/release.sh 0.12.0   # バージョン更新 & タグ作成
+./scripts/release.sh patch   # 0.12.0 -> 0.12.1
+./scripts/release.sh minor   # 0.12.0 -> 0.13.0
+./scripts/release.sh major   # 0.12.0 -> 1.0.0
 ```
 
 自動的に以下を行う:
