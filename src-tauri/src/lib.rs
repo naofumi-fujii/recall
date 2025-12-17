@@ -215,6 +215,7 @@ fn show_window_at_mouse(app_handle: &AppHandle) {
         // which works correctly with multiple monitors
         #[cfg(target_os = "macos")]
         {
+            use core_graphics::display::CGDisplay;
             use core_graphics::event::CGEvent;
             use core_graphics::event_source::{CGEventSource, CGEventSourceStateID};
 
@@ -222,15 +223,84 @@ fn show_window_at_mouse(app_handle: &AppHandle) {
                 let event = CGEvent::new(source);
                 if let Ok(event) = event {
                     let location = event.location();
-                    let x = location.x as i32;
-                    let y = location.y as i32;
+                    let mouse_x = location.x as i32;
+                    let mouse_y = location.y as i32;
 
-                    // Window size
-                    let window_width = 400;
+                    // Get actual window size
+                    let (window_width, window_height) = if let Ok(size) = window.outer_size() {
+                        (size.width as i32, size.height as i32)
+                    } else {
+                        (500, 600) // fallback
+                    };
 
-                    // Position window centered horizontally on cursor, slightly below
-                    let new_x = x - window_width / 2;
-                    let new_y = y + 10;
+                    // Find the display containing the mouse cursor
+                    let (screen_x, screen_y, screen_width, screen_height) = {
+                        let mut found_bounds = None;
+
+                        // Get all active displays and find the one containing the mouse
+                        if let Ok(display_ids) = CGDisplay::active_displays() {
+                            for display_id in display_ids {
+                                let display = CGDisplay::new(display_id);
+                                let bounds = display.bounds();
+                                let x = bounds.origin.x;
+                                let y = bounds.origin.y;
+                                let w = bounds.size.width;
+                                let h = bounds.size.height;
+
+                                // Check if mouse is within this display
+                                if location.x >= x
+                                    && location.x < x + w
+                                    && location.y >= y
+                                    && location.y < y + h
+                                {
+                                    found_bounds = Some((x as i32, y as i32, w as i32, h as i32));
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Fallback to main display if not found
+                        found_bounds.unwrap_or_else(|| {
+                            let main = CGDisplay::main();
+                            let bounds = main.bounds();
+                            (
+                                bounds.origin.x as i32,
+                                bounds.origin.y as i32,
+                                bounds.size.width as i32,
+                                bounds.size.height as i32,
+                            )
+                        })
+                    };
+
+                    // Calculate initial position (centered horizontally on cursor, slightly below)
+                    let mut new_x = mouse_x - window_width / 2;
+                    let mut new_y = mouse_y + 10;
+
+                    // Clamp to screen bounds with margins
+                    let menu_bar_height = 25;
+                    let edge_margin = 10; // margin from screen edges
+                    let screen_left = screen_x + edge_margin;
+                    let screen_right = screen_x + screen_width - window_width - edge_margin;
+                    let screen_top = screen_y + menu_bar_height + edge_margin;
+                    let screen_bottom = screen_y + screen_height - window_height - edge_margin;
+
+                    // Clamp X position
+                    if new_x < screen_left {
+                        new_x = screen_left;
+                    } else if new_x > screen_right {
+                        new_x = screen_right;
+                    }
+
+                    // Clamp Y position
+                    if new_y < screen_top {
+                        new_y = screen_top;
+                    } else if new_y > screen_bottom {
+                        // If window would go below screen, show it above the cursor instead
+                        new_y = mouse_y - window_height - 10;
+                        if new_y < screen_top {
+                            new_y = screen_top;
+                        }
+                    }
 
                     let _ = window.set_position(PhysicalPosition::new(new_x, new_y));
                 }
