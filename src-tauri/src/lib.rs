@@ -226,9 +226,12 @@ fn show_window_at_mouse(app_handle: &AppHandle) {
                     let mouse_x = location.x as i32;
                     let mouse_y = location.y as i32;
 
-                    // Window size
-                    let window_width = 400;
-                    let window_height = 500;
+                    // Get actual window size
+                    let (window_width, window_height) = if let Ok(size) = window.outer_size() {
+                        (size.width as i32, size.height as i32)
+                    } else {
+                        (500, 600) // fallback
+                    };
 
                     // Find the display containing the mouse cursor
                     let (screen_x, screen_y, screen_width, screen_height) = {
@@ -278,7 +281,7 @@ fn show_window_at_mouse(app_handle: &AppHandle) {
                     let edge_margin = 10; // margin from screen edges
                     let screen_left = screen_x + edge_margin;
                     let screen_right = screen_x + screen_width - window_width - edge_margin;
-                    let screen_top = screen_y + menu_bar_height;
+                    let screen_top = screen_y + menu_bar_height + edge_margin;
                     let screen_bottom = screen_y + screen_height - window_height - edge_margin;
 
                     // Clamp X position
