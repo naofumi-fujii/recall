@@ -273,12 +273,13 @@ fn show_window_at_mouse(app_handle: &AppHandle) {
                     let mut new_x = mouse_x - window_width / 2;
                     let mut new_y = mouse_y + 10;
 
-                    // Clamp to screen bounds (with small margin for menu bar ~25px)
+                    // Clamp to screen bounds with margins
                     let menu_bar_height = 25;
-                    let screen_left = screen_x;
-                    let screen_right = screen_x + screen_width - window_width;
+                    let edge_margin = 10; // margin from screen edges
+                    let screen_left = screen_x + edge_margin;
+                    let screen_right = screen_x + screen_width - window_width - edge_margin;
                     let screen_top = screen_y + menu_bar_height;
-                    let screen_bottom = screen_y + screen_height - window_height;
+                    let screen_bottom = screen_y + screen_height - window_height - edge_margin;
 
                     // Clamp X position
                     if new_x < screen_left {
