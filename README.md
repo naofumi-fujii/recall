@@ -67,18 +67,6 @@ History location: `~/Library/Application Support/banzai/clipboard_history.jsonl`
 
 The workflow will automatically update versions, create a tag, build universal binaries (x86_64 + arm64), and publish the release.
 
-### Manual Release
-
-Run the release script locally with the desired bump type:
-
-```bash
-./scripts/release.sh patch   # 0.12.0 -> 0.12.1
-./scripts/release.sh minor   # 0.12.0 -> 0.13.0
-./scripts/release.sh major   # 0.12.0 -> 1.0.0
-```
-
-This updates the version in all required files, creates a git commit and tag, and pushes to the repository.
-
 ## License
 
 MIT
