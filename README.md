@@ -58,13 +58,15 @@ History location: `~/Library/Application Support/banzai/clipboard_history.jsonl`
 
 ## Release
 
-Run the interactive release script:
+Run the release script with the desired bump type:
 
 ```bash
-npx tsx scripts/release.ts
+./scripts/release.sh patch   # 0.12.0 -> 0.12.1
+./scripts/release.sh minor   # 0.12.0 -> 0.13.0
+./scripts/release.sh major   # 0.12.0 -> 1.0.0
 ```
 
-This updates the version in all required files and creates a git tag. GitHub Actions will automatically build and publish the release.
+This updates the version in all required files, creates a git commit and tag, and pushes to the repository. GitHub Actions will automatically build and publish the release.
 
 ## License
 
