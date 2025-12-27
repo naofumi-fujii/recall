@@ -1,43 +1,43 @@
 #!/bin/bash
-# release.sh - バージョン更新スクリプト (CI用)
+# release.sh - Version update script (for CI)
 #
-# 使い方:
+# Usage:
 #   ./scripts/release.sh patch   # 0.12.0 -> 0.12.1
 #   ./scripts/release.sh minor   # 0.12.0 -> 0.13.0
 #   ./scripts/release.sh major   # 0.12.0 -> 1.0.0
 #
-# 処理内容:
-#   1. bump typeのバリデーション
-#   2. 現在バージョンから新バージョンを計算
-#   3. タグの重複チェック
-#   4. 3ファイルのバージョン更新
-#   5. Cargo.lock更新
-#   6. コミット & タグ作成 & プッシュ
+# Process:
+#   1. Validate bump type
+#   2. Calculate new version from current version
+#   3. Check for duplicate tags
+#   4. Update version in 3 files
+#   5. Update Cargo.lock
+#   6. Commit & create tag & push
 
 set -euo pipefail
 
 BUMP_TYPE="${1:-}"
 
 if [[ -z "$BUMP_TYPE" ]]; then
-  echo "❌ bump typeを指定してください"
-  echo "使い方: ./scripts/release.sh [major|minor|patch]"
+  echo "❌ Please specify bump type"
+  echo "Usage: ./scripts/release.sh [major|minor|patch]"
   exit 1
 fi
 
-# bump typeのバリデーション
+# Validate bump type
 if [[ ! "$BUMP_TYPE" =~ ^(major|minor|patch)$ ]]; then
-  echo "❌ 無効なbump typeです (major, minor, patch のいずれかを指定)"
+  echo "❌ Invalid bump type (must be one of: major, minor, patch)"
   exit 1
 fi
 
-# 現在のバージョンを取得
+# Get current version
 CURRENT=$(grep '^version' src-tauri/Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
-echo "現在のバージョン: $CURRENT"
+echo "Current version: $CURRENT"
 
-# バージョンを分解
+# Parse version
 IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
 
-# 新バージョンを計算
+# Calculate new version
 case "$BUMP_TYPE" in
   major)
     NEW_MAJOR=$((MAJOR + 1))
@@ -57,51 +57,51 @@ case "$BUMP_TYPE" in
 esac
 
 VERSION="${NEW_MAJOR}.${NEW_MINOR}.${NEW_PATCH}"
-echo "新しいバージョン: $VERSION ($BUMP_TYPE)"
+echo "New version: $VERSION ($BUMP_TYPE)"
 
-# タグの重複チェック
+# Check for duplicate tag
 TAG="v$VERSION"
 if git rev-parse "$TAG" >/dev/null 2>&1; then
-  echo "❌ タグ $TAG は既に存在します"
+  echo "❌ Tag $TAG already exists"
   exit 1
 fi
 
 echo ""
-echo "📝 バージョンを更新中..."
+echo "📝 Updating version..."
 
-# Cargo.toml を更新
+# Update Cargo.toml
 sed -i '' "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
 
-# package.json を更新
+# Update package.json
 jq ".version = \"$VERSION\"" package.json > package.json.tmp
 mv package.json.tmp package.json
 
-# tauri.conf.json を更新
+# Update tauri.conf.json
 jq ".version = \"$VERSION\"" src-tauri/tauri.conf.json > tauri.conf.json.tmp
 mv tauri.conf.json.tmp src-tauri/tauri.conf.json
 
-echo "📦 cargo build を実行中..."
+echo "📦 Running cargo build..."
 cd src-tauri && cargo build --quiet && cd ..
 
-echo "📝 変更をコミット中..."
+echo "📝 Committing changes..."
 git config user.name "github-actions[bot]"
 git config user.email "github-actions[bot]@users.noreply.github.com"
 git add src-tauri/Cargo.toml src-tauri/Cargo.lock package.json src-tauri/tauri.conf.json
-git commit -m "バージョンを${VERSION}に更新"
+git commit -m "Update version to ${VERSION}"
 
-echo "⬆️  コミットをプッシュ中..."
+echo "⬆️  Pushing commit..."
 git push
 
-echo "🏷️  タグ $TAG を作成中..."
+echo "🏷️  Creating tag $TAG..."
 git tag "$TAG"
 
-echo "⬆️  タグ $TAG をプッシュ中..."
+echo "⬆️  Pushing tag $TAG..."
 git push origin "$TAG"
 
 echo ""
-echo "✅ バージョン更新完了: $TAG"
+echo "✅ Version update complete: $TAG"
 
-# GitHub Actions の output にバージョンを出力
+# Output version for GitHub Actions
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
   echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 fi
