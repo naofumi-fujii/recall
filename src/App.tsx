@@ -11,6 +11,11 @@ interface ClipboardEntry {
   pinned: boolean;
 }
 
+interface HistoryResponse {
+  entries: ClipboardEntry[];
+  max_entries: number;
+}
+
 type Theme = "system" | "light" | "dark";
 
 const ThemeIcon = ({ theme }: { theme: Theme }) => {
@@ -27,6 +32,7 @@ const ThemeIcon = ({ theme }: { theme: Theme }) => {
 
 function App() {
   const [history, setHistory] = useState<ClipboardEntry[]>([]);
+  const [maxEntries, setMaxEntries] = useState<number>(100);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [version, setVersion] = useState<string>("");
@@ -54,8 +60,9 @@ function App() {
 
   const loadHistory = async () => {
     try {
-      const entries = await invoke<ClipboardEntry[]>("get_history");
-      setHistory(entries);
+      const response = await invoke<HistoryResponse>("get_history");
+      setHistory(response.entries);
+      setMaxEntries(response.max_entries);
     } catch (error) {
       console.error("Failed to load history:", error);
     }
@@ -172,7 +179,9 @@ function App() {
       </header>
 
       <div className="settings-row">
-        <span className="history-count">{history.length} 件</span>
+        <span className="history-count">
+          {history.length}/{maxEntries}件
+        </span>
         <button
           className="clear-button"
           onClick={handleClearAll}

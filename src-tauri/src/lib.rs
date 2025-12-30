@@ -31,6 +31,12 @@ pub struct ClipboardEntry {
     pub pinned: bool,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HistoryResponse {
+    pub entries: Vec<ClipboardEntry>,
+    pub max_entries: usize,
+}
+
 const MAX_HISTORY_ENTRIES: usize = 100;
 const DOUBLE_TAP_THRESHOLD_MS: u128 = 400;
 
@@ -122,10 +128,13 @@ fn load_history() -> Vec<ClipboardEntry> {
 }
 
 #[tauri::command]
-fn get_history() -> Vec<ClipboardEntry> {
+fn get_history() -> HistoryResponse {
     let mut history = load_history();
     history.reverse();
-    history
+    HistoryResponse {
+        entries: history,
+        max_entries: MAX_HISTORY_ENTRIES,
+    }
 }
 
 #[tauri::command]
