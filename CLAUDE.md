@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Banzai is a macOS menu bar clipboard history manager built with Tauri v2. It monitors the system clipboard, stores history entries in a local JSONL file, and provides a Spotlight-like popup UI triggered by double-tapping the Option key.
+Recall is a macOS menu bar clipboard history manager built with Tauri v2. It monitors the system clipboard, stores history entries in a local JSONL file, and provides a Spotlight-like popup UI triggered by double-tapping the Option key.
 
 ## Development Commands
 
@@ -36,7 +36,7 @@ cd src-tauri && cargo test            # Run Rust tests
 **Rust Backend (`src-tauri/src/lib.rs`)**
 - `ClipboardEntry` struct with timestamp, content, and pinned flag
 - Clipboard monitoring thread polls every 500ms using `arboard` crate
-- History stored in `~/Library/Application Support/banzai/clipboard_history.jsonl`
+- History stored in `~/Library/Application Support/recall/clipboard_history.jsonl`
 - Global hotkey detection using `NSEvent` monitors for Option key double-tap
 - Window positioning logic handles multi-monitor setups via `core-graphics`
 

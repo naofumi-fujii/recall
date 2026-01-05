@@ -46,7 +46,7 @@ static PREVIOUS_APP: Mutex<Option<objc2::rc::Retained<NSRunningApplication>>> = 
 fn get_data_dir() -> PathBuf {
     let data_dir = dirs::data_local_dir()
         .unwrap_or_else(|| PathBuf::from("."))
-        .join("banzai");
+        .join("recall");
     fs::create_dir_all(&data_dir).ok();
     data_dir
 }
@@ -245,7 +245,7 @@ fn show_window_at_mouse(app_handle: &AppHandle) {
                 let bundle_id = active_app.bundleIdentifier();
                 if let Some(id) = bundle_id {
                     let id_str = id.to_string();
-                    if id_str != "com.banzai.clipboard" {
+                    if id_str != "com.recall.clipboard" {
                         *PREVIOUS_APP.lock().unwrap() = Some(active_app.clone());
                     }
                 }
@@ -365,7 +365,7 @@ fn show_window_at_mouse(app_handle: &AppHandle) {
 fn start_hotkey_listener(app_handle: AppHandle) {
     use std::sync::Mutex;
 
-    println!("[Banzai] Starting hotkey listener with NSEvent...");
+    println!("[Recall] Starting hotkey listener with NSEvent...");
 
     // Use static variables wrapped in Mutex for thread safety
     static LAST_OPTION_RELEASE: Mutex<Option<Instant>> = Mutex::new(None);
@@ -397,7 +397,7 @@ fn start_hotkey_listener(app_handle: AppHandle) {
                 if let Some(last) = *last_release {
                     let elapsed = now.duration_since(last).as_millis();
                     if elapsed < DOUBLE_TAP_THRESHOLD_MS {
-                        println!("[Banzai] Option double tap detected!");
+                        println!("[Recall] Option double tap detected!");
                         if let Some(ref handle) = *APP_HANDLE.lock().unwrap() {
                             let _ = handle.emit("show-window-at-mouse", ());
                         }
@@ -434,7 +434,7 @@ fn start_hotkey_listener(app_handle: AppHandle) {
                 if let Some(last) = *last_release {
                     let elapsed = now.duration_since(last).as_millis();
                     if elapsed < DOUBLE_TAP_THRESHOLD_MS {
-                        println!("[Banzai] Option double tap detected (local)!");
+                        println!("[Recall] Option double tap detected (local)!");
                         if let Some(ref handle) = *APP_HANDLE.lock().unwrap() {
                             let _ = handle.emit("show-window-at-mouse", ());
                         }
@@ -458,7 +458,7 @@ fn start_hotkey_listener(app_handle: AppHandle) {
             );
         }
 
-        println!("[Banzai] NSEvent global and local monitors registered");
+        println!("[Recall] NSEvent global and local monitors registered");
 
         // Keep the thread alive and run the event loop
         let run_loop = NSRunLoop::currentRunLoop();

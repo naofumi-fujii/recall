@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Banzai",
+  "productName": "Recall",
   "version": "1.2.11",
-  "identifier": "com.banzai.clipboard",
+  "identifier": "com.recall.clipboard",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Banzai - Clipboard History",
+        "title": "Recall - Clipboard History",
         "width": 500,
         "height": 1400,
         "resizable": true,
