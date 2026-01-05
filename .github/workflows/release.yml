@@ -63,21 +63,21 @@ jobs:
       - name: Create universal binary
         run: |
           lipo -create \
-            src-tauri/target/x86_64-apple-darwin/release/banzai \
-            src-tauri/target/aarch64-apple-darwin/release/banzai \
-            -output /tmp/banzai-universal
+            src-tauri/target/x86_64-apple-darwin/release/recall \
+            src-tauri/target/aarch64-apple-darwin/release/recall \
+            -output /tmp/recall-universal
 
       - name: Replace with universal binary
-        run: cp /tmp/banzai-universal src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Banzai.app/Contents/MacOS/banzai
+        run: cp /tmp/recall-universal src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Recall.app/Contents/MacOS/recall
 
       - name: Create zip archive
         run: |
           cd src-tauri/target/aarch64-apple-darwin/release/bundle/macos
-          zip -r Banzai-v${{ steps.version.outputs.version }}.zip Banzai.app
+          zip -r Recall-v${{ steps.version.outputs.version }}.zip Recall.app
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          files: src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Banzai-v${{ steps.version.outputs.version }}.zip
+          files: src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Recall-v${{ steps.version.outputs.version }}.zip
           generate_release_notes: true

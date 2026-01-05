@@ -9,7 +9,7 @@ dist
 /src-tauri/target
 
 # Build
-/Banzai.app
+/Recall.app
 *.dmg
 
 # IDE

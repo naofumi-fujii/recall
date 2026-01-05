@@ -1,4 +1,4 @@
-# Banzai
+# Recall
 
 A macOS menu bar clipboard history manager built with Tauri 2.
 
@@ -16,11 +16,11 @@ A macOS menu bar clipboard history manager built with Tauri 2.
 ## Installation
 
 ### Homebrew (recommended)
-- https://github.com/naofumi-fujii/homebrew-banzai
+- https://github.com/naofumi-fujii/homebrew-recall
 
 ```bash
-brew tap naofumi-fujii/banzai
-brew install --cask banzai
+brew tap naofumi-fujii/recall
+brew install --cask recall
 ```
 
 ### Build from Source
@@ -34,11 +34,11 @@ npm install
 npm run tauri build
 ```
 
-The app bundle is created at `src-tauri/target/release/bundle/macos/Banzai.app`.
+The app bundle is created at `src-tauri/target/release/bundle/macos/Recall.app`.
 
 ## Usage
 
-1. Launch Banzai - a clipboard icon appears in the menu bar
+1. Launch Recall - a clipboard icon appears in the menu bar
 2. Copy text as usual - it's automatically saved to history
 3. Double-tap the **Option** key to open the history window
 4. Click any entry to copy it back to clipboard (window closes automatically)
@@ -54,13 +54,13 @@ npm run tauri dev
 
 ## Data Storage
 
-History location: `~/Library/Application Support/banzai/clipboard_history.jsonl`
+History location: `~/Library/Application Support/recall/clipboard_history.jsonl`
 
 ## Release
 
 ### Using GitHub Actions (Recommended)
 
-1. Go to [Actions](https://github.com/naofumi-fujii/banzai/actions/workflows/release.yml) tab
+1. Go to [Actions](https://github.com/naofumi-fujii/recall/actions/workflows/release.yml) tab
 2. Click "Run workflow"
 3. Select the version bump type (patch/minor/major)
 4. Click "Run workflow"
