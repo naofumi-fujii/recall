@@ -171,7 +171,7 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>Banzai {version && <span className="version">v{version}</span>}</h1>
+        <h1>Recall {version && <span className="version">v{version}</span>}</h1>
         <p className="subtitle">Clipboard History</p>
         <button className="theme-toggle" onClick={cycleTheme} title={theme}>
           <ThemeIcon theme={theme} />
