@@ -37,7 +37,7 @@ pub struct HistoryResponse {
     pub max_entries: usize,
 }
 
-const MAX_HISTORY_ENTRIES: usize = 100;
+const MAX_HISTORY_ENTRIES: usize = 200;
 const DOUBLE_TAP_THRESHOLD_MS: u128 = 400;
 
 #[cfg(target_os = "macos")]
