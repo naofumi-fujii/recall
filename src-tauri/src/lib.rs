@@ -93,7 +93,7 @@ fn save_entry(entry: &ClipboardEntry) -> std::io::Result<()> {
         history.extend(pinned);
 
         // Sort by timestamp to maintain chronological order
-        history.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
+        history.sort_by_key(|a| a.timestamp);
     }
 
     save_history(&history)
