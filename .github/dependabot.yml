@@ -15,6 +15,13 @@ updates:
       day: "saturday"
       time: "07:00"
       timezone: "Asia/Tokyo"
+    groups:
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
 
   - package-ecosystem: "github-actions"
     directory: "/"
