@@ -7,6 +7,12 @@ updates:
       day: "saturday"
       time: "07:00"
       timezone: "Asia/Tokyo"
+    groups:
+      tauri:
+        patterns:
+          - "tauri"
+          - "tauri-*"
+          - "tauri-plugin-*"
 
   - package-ecosystem: "npm"
     directory: "/"
@@ -22,6 +28,9 @@ updates:
           - "react-dom"
           - "@types/react"
           - "@types/react-dom"
+      tauri:
+        patterns:
+          - "@tauri-apps/*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
