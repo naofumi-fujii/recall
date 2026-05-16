@@ -357,8 +357,7 @@ fn show_window_at_mouse(app_handle: &AppHandle) {
                         }
                     }
 
-                    let _ = window
-                        .set_position(LogicalPosition::new(new_x as f64, new_y as f64));
+                    let _ = window.set_position(LogicalPosition::new(new_x as f64, new_y as f64));
                 }
             }
         }
