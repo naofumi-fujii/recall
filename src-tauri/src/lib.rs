@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, Emitter, Listener, Manager, PhysicalPosition};
+use tauri::{AppHandle, Emitter, Listener, LogicalPosition, Manager};
 
 #[cfg(target_os = "macos")]
 use block2::StackBlock;
@@ -275,9 +275,15 @@ fn show_window_at_mouse(app_handle: &AppHandle) {
                     let mouse_x = location.x as i32;
                     let mouse_y = location.y as i32;
 
-                    // Get actual window size
+                    // CGEvent / CGDisplay return coordinates in logical points,
+                    // but window.outer_size() returns physical pixels. Convert
+                    // window size to logical points so all calculations share units.
+                    let scale_factor = window.scale_factor().unwrap_or(1.0);
                     let (window_width, window_height) = if let Ok(size) = window.outer_size() {
-                        (size.width as i32, size.height as i32)
+                        (
+                            (size.width as f64 / scale_factor) as i32,
+                            (size.height as f64 / scale_factor) as i32,
+                        )
                     } else {
                         (500, 600) // fallback
                     };
@@ -351,7 +357,8 @@ fn show_window_at_mouse(app_handle: &AppHandle) {
                         }
                     }
 
-                    let _ = window.set_position(PhysicalPosition::new(new_x, new_y));
+                    let _ = window
+                        .set_position(LogicalPosition::new(new_x as f64, new_y as f64));
                 }
             }
         }
