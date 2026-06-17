@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -35,12 +35,21 @@ function App() {
   const [maxEntries, setMaxEntries] = useState<number>(100);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [query, setQuery] = useState<string>("");
   const [version, setVersion] = useState<string>("");
   const [theme, setTheme] = useState<Theme>(() => {
     return (localStorage.getItem("theme") as Theme) || "system";
   });
   const listRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Filters history by case-insensitive substring match on content (src/App.tsx)
+  const filteredHistory = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return history;
+    return history.filter((entry) => entry.content.toLowerCase().includes(q));
+  }, [history, query]);
 
   useEffect(() => {
     localStorage.setItem("theme", theme);
@@ -77,20 +86,40 @@ function App() {
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (history.length === 0) return;
+      // Whether focus is in the search input (src/App.tsx). When typing in the
+      // search box, j/k should be entered as text instead of navigating.
+      const inSearch = document.activeElement === searchInputRef.current;
+
+      if (filteredHistory.length === 0) return;
 
       switch (e.key) {
         case "ArrowDown":
-        case "j":
           e.preventDefault();
           setSelectedIndex((prev) => {
-            const next = Math.min(prev + 1, history.length - 1);
+            const next = Math.min(prev + 1, filteredHistory.length - 1);
+            scrollToSelected(next);
+            return next;
+          });
+          break;
+        case "j":
+          if (inSearch) return;
+          e.preventDefault();
+          setSelectedIndex((prev) => {
+            const next = Math.min(prev + 1, filteredHistory.length - 1);
             scrollToSelected(next);
             return next;
           });
           break;
         case "ArrowUp":
+          e.preventDefault();
+          setSelectedIndex((prev) => {
+            const next = Math.max(prev - 1, 0);
+            scrollToSelected(next);
+            return next;
+          });
+          break;
         case "k":
+          if (inSearch) return;
           e.preventDefault();
           setSelectedIndex((prev) => {
             const next = Math.max(prev - 1, 0);
@@ -100,13 +129,13 @@ function App() {
           break;
         case "Enter":
           e.preventDefault();
-          if (history[selectedIndex]) {
-            handleCopy(history[selectedIndex].content, selectedIndex);
+          if (filteredHistory[selectedIndex]) {
+            handleCopy(filteredHistory[selectedIndex].content, selectedIndex);
           }
           break;
       }
     },
-    [history, selectedIndex, scrollToSelected]
+    [filteredHistory, selectedIndex, scrollToSelected]
   );
 
   useEffect(() => {
@@ -115,6 +144,13 @@ function App() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleKeyDown]);
+
+  // Keep selection within bounds when the filtered list shrinks (src/App.tsx)
+  useEffect(() => {
+    setSelectedIndex((prev) =>
+      prev > filteredHistory.length - 1 ? 0 : prev
+    );
+  }, [filteredHistory.length]);
 
   useEffect(() => {
     loadHistory();
@@ -125,8 +161,17 @@ function App() {
       setSelectedIndex(0);
     });
 
+    // When the window is shown via the hotkey, reset the search and focus the
+    // input so the user can immediately type to filter (src/App.tsx)
+    const unlistenShow = listen("show-window-at-mouse", () => {
+      setQuery("");
+      setSelectedIndex(0);
+      requestAnimationFrame(() => searchInputRef.current?.focus());
+    });
+
     return () => {
       unlistenChanged.then((f) => f());
+      unlistenShow.then((f) => f());
     };
   }, []);
 
@@ -158,6 +203,44 @@ function App() {
     }
   };
 
+  // Emacs/readline-style line editing for the search input (src/App.tsx).
+  // Ctrl+U clears to line start, Ctrl+W deletes the word before the cursor;
+  // Escape clears the whole field. (Cmd is also accepted for U/W.)
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const mod = e.metaKey || e.ctrlKey;
+    const el = e.currentTarget;
+
+    // Ctrl+U: delete from cursor back to the line start
+    if (mod && e.key === "u") {
+      e.preventDefault();
+      const cursor = el.selectionStart ?? query.length;
+      const after = query.slice(el.selectionEnd ?? cursor);
+      setQuery(after);
+      requestAnimationFrame(() => el.setSelectionRange(0, 0));
+      return;
+    }
+
+    // Ctrl+W: delete the word before the cursor (trailing whitespace + word)
+    if (mod && e.key === "w") {
+      e.preventDefault();
+      const start = el.selectionStart ?? query.length;
+      const end = el.selectionEnd ?? start;
+      const before = query.slice(0, start).replace(/\s+$/, "").replace(/\S+$/, "");
+      const after = query.slice(end);
+      setQuery(before + after);
+      requestAnimationFrame(() =>
+        el.setSelectionRange(before.length, before.length)
+      );
+      return;
+    }
+
+    if (e.key === "Escape" && query) {
+      e.preventDefault();
+      e.stopPropagation();
+      setQuery("");
+    }
+  };
+
   const handleClearAll = async () => {
     try {
       await invoke("clear_all_history");
@@ -178,9 +261,24 @@ function App() {
         </button>
       </header>
 
+      <div className="search-container">
+        <input
+          ref={searchInputRef}
+          type="text"
+          className="search-input"
+          placeholder="絞り込み..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleSearchKeyDown}
+          autoFocus
+        />
+      </div>
+
       <div className="settings-row">
         <span className="history-count">
-          {history.length}/{maxEntries}件
+          {query.trim()
+            ? `${filteredHistory.length}件 / ${history.length}件`
+            : `${history.length}/${maxEntries}件`}
         </span>
         <button
           className="clear-button"
@@ -193,10 +291,12 @@ function App() {
       </div>
 
       <div className="history-list" ref={listRef}>
-        {history.length === 0 ? (
-          <div className="empty-state">履歴がありません</div>
+        {filteredHistory.length === 0 ? (
+          <div className="empty-state">
+            {query.trim() ? "一致する履歴がありません" : "履歴がありません"}
+          </div>
         ) : (
-          history.map((entry, index) => (
+          filteredHistory.map((entry, index) => (
             <div
               key={`${entry.timestamp}-${index}`}
               ref={(el) => {
