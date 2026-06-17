@@ -1,6 +1,6 @@
 {
   "name": "recall",
-  "version": "2.0.19",
+  "version": "2.1.0",
   "description": "A macOS menu bar clipboard history manager.",
   "type": "module",
   "scripts": {
