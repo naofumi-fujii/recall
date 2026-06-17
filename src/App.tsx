@@ -44,11 +44,16 @@ function App() {
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Filters history by case-insensitive substring match on content (src/App.tsx)
+  // Filters history by case-insensitive AND match on content (src/App.tsx).
+  // The query is split on whitespace and every term must be a substring of the
+  // entry content, so space-separated words act as an AND search.
   const filteredHistory = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return history;
-    return history.filter((entry) => entry.content.toLowerCase().includes(q));
+    const terms = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    if (terms.length === 0) return history;
+    return history.filter((entry) => {
+      const content = entry.content.toLowerCase();
+      return terms.every((term) => content.includes(term));
+    });
   }, [history, query]);
 
   useEffect(() => {
@@ -271,6 +276,10 @@ function App() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleSearchKeyDown}
           autoFocus
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
         />
       </div>
 
