@@ -91,6 +91,12 @@ function App() {
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      // Ignore keystrokes emitted while an IME composition is active (src/App.tsx).
+      // When converting Japanese with the IME, the Enter that confirms the
+      // conversion would otherwise be treated as "copy & close". keyCode 229 is
+      // the legacy fallback for browsers that don't set isComposing reliably.
+      if (e.isComposing || e.keyCode === 229) return;
+
       // Whether focus is in the search input (src/App.tsx). When typing in the
       // search box, j/k should be entered as text instead of navigating.
       const inSearch = document.activeElement === searchInputRef.current;
