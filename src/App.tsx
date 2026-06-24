@@ -37,6 +37,7 @@ function App() {
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [query, setQuery] = useState<string>("");
   const [version, setVersion] = useState<string>("");
+  const [showClearConfirm, setShowClearConfirm] = useState<boolean>(false);
   const [theme, setTheme] = useState<Theme>(() => {
     return (localStorage.getItem("theme") as Theme) || "system";
   });
@@ -91,6 +92,20 @@ function App() {
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      // While the clear-all confirmation dialog is open (src/App.tsx), Enter
+      // confirms the deletion and Escape cancels it; all list navigation keys
+      // are suppressed so they don't act on the hidden list underneath.
+      if (showClearConfirm) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          confirmClearAll();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          cancelClearAll();
+        }
+        return;
+      }
+
       // Ignore keystrokes emitted while an IME composition is active (src/App.tsx).
       // When converting Japanese with the IME, the Enter that confirms the
       // conversion would otherwise be treated as "copy & close". keyCode 229 is
@@ -146,7 +161,7 @@ function App() {
           break;
       }
     },
-    [filteredHistory, selectedIndex, scrollToSelected]
+    [filteredHistory, selectedIndex, scrollToSelected, showClearConfirm]
   );
 
   useEffect(() => {
@@ -252,14 +267,31 @@ function App() {
     }
   };
 
-  const handleClearAll = async () => {
+  // Opens the clear-all confirmation dialog in src/App.tsx (settings-row trash
+  // button). The actual deletion is deferred to confirmClearAll so an accidental
+  // click no longer wipes history immediately.
+  const handleClearAll = () => {
+    setShowClearConfirm(true);
+  };
+
+  // Performs the actual history deletion in src/App.tsx after the user confirms
+  // in the dialog opened by handleClearAll. Invokes the clear_all_history
+  // command, then reloads the list and closes the dialog.
+  const confirmClearAll = async () => {
     try {
       await invoke("clear_all_history");
       loadHistory();
       setSelectedIndex(0);
     } catch (error) {
       console.error("Failed to clear history:", error);
+    } finally {
+      setShowClearConfirm(false);
     }
+  };
+
+  // Cancels the clear-all confirmation dialog in src/App.tsx without deleting.
+  const cancelClearAll = () => {
+    setShowClearConfirm(false);
   };
 
   return (
@@ -335,6 +367,31 @@ function App() {
           ))
         )}
       </div>
+
+      {showClearConfirm && (
+        <div className="confirm-overlay" onClick={cancelClearAll}>
+          <div
+            className="confirm-dialog"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="confirm-message">
+              Clear all unpinned history?
+            </p>
+            <div className="confirm-actions">
+              <button
+                className="confirm-cancel"
+                onClick={cancelClearAll}
+                autoFocus
+              >
+                Cancel
+              </button>
+              <button className="confirm-delete" onClick={confirmClearAll}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
