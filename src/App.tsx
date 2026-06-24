@@ -375,7 +375,7 @@ function App() {
             onClick={(e) => e.stopPropagation()}
           >
             <p className="confirm-message">
-              ピン留め以外の履歴をすべて削除しますか？
+              Clear all unpinned history?
             </p>
             <div className="confirm-actions">
               <button
@@ -383,10 +383,10 @@ function App() {
                 onClick={cancelClearAll}
                 autoFocus
               >
-                キャンセル
+                Cancel
               </button>
               <button className="confirm-delete" onClick={confirmClearAll}>
-                削除
+                Delete
               </button>
             </div>
           </div>
