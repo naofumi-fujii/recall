@@ -1,6 +1,6 @@
 [package]
 name = "recall"
-version = "2.1.15"
+version = "2.1.16"
 description = "A macOS menu bar clipboard history manager"
 authors = ["naofumi-fujii"]
 license = "MIT"
