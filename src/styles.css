@@ -96,6 +96,31 @@ body {
   margin-bottom: 4px;
 }
 
+/* Right-hand button group of the settings row (sort + clear all) */
+.settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Sort order toggle button in the settings row */
+.sort-button {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid #d2d2d7;
+  border-radius: 4px;
+  background: none;
+  color: #86868b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sort-button:hover {
+  border-color: #0071e3;
+  color: #0071e3;
+}
+
 .auto-launch-toggle {
   display: flex;
   align-items: center;
@@ -399,6 +424,16 @@ body {
     border-color: #0a84ff;
     color: #0a84ff;
   }
+
+  body:not([data-theme="light"]) .sort-button {
+    border-color: #38383a;
+    color: #8e8e93;
+  }
+
+  body:not([data-theme="light"]) .sort-button:hover {
+    border-color: #0a84ff;
+    color: #0a84ff;
+  }
 }
 
 /* Dark mode - forced */
@@ -516,6 +551,16 @@ body[data-theme="dark"] .theme-toggle {
 }
 
 body[data-theme="dark"] .theme-toggle:hover {
+  border-color: #0a84ff;
+  color: #0a84ff;
+}
+
+body[data-theme="dark"] .sort-button {
+  border-color: #38383a;
+  color: #8e8e93;
+}
+
+body[data-theme="dark"] .sort-button:hover {
   border-color: #0a84ff;
   color: #0a84ff;
 }

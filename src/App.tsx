@@ -3,7 +3,16 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { getVersion } from "@tauri-apps/api/app";
-import { Monitor, Sun, Moon, Trash2 } from "lucide-react";
+import {
+  Monitor,
+  Sun,
+  Moon,
+  Trash2,
+  ClockArrowDown,
+  ClockArrowUp,
+  ArrowDownAZ,
+  ArrowUpAZ,
+} from "lucide-react";
 
 interface ClipboardEntry {
   timestamp: string;
@@ -18,6 +27,24 @@ interface HistoryResponse {
 
 type Theme = "system" | "light" | "dark";
 
+// Sort order of the history list (src/App.tsx). Cycled by the sort button in
+// the settings row: newest first -> oldest first -> content A-Z -> content Z-A.
+type SortOrder = "time-desc" | "time-asc" | "content-asc" | "content-desc";
+
+const SORT_ORDERS: SortOrder[] = [
+  "time-desc",
+  "time-asc",
+  "content-asc",
+  "content-desc",
+];
+
+const SORT_LABELS: Record<SortOrder, string> = {
+  "time-desc": "時間: 新しい順",
+  "time-asc": "時間: 古い順",
+  "content-asc": "内容: 昇順 (A→Z)",
+  "content-desc": "内容: 降順 (Z→A)",
+};
+
 const ThemeIcon = ({ theme }: { theme: Theme }) => {
   const iconProps = { size: 16, strokeWidth: 2 };
   switch (theme) {
@@ -27,6 +54,21 @@ const ThemeIcon = ({ theme }: { theme: Theme }) => {
       return <Sun {...iconProps} />;
     case "dark":
       return <Moon {...iconProps} />;
+  }
+};
+
+// Icon showing the current sort order in src/App.tsx (settings-row sort button)
+const SortIcon = ({ order }: { order: SortOrder }) => {
+  const iconProps = { size: 12, strokeWidth: 2 };
+  switch (order) {
+    case "time-desc":
+      return <ClockArrowDown {...iconProps} />;
+    case "time-asc":
+      return <ClockArrowUp {...iconProps} />;
+    case "content-asc":
+      return <ArrowDownAZ {...iconProps} />;
+    case "content-desc":
+      return <ArrowUpAZ {...iconProps} />;
   }
 };
 
@@ -41,6 +83,10 @@ function App() {
   const [theme, setTheme] = useState<Theme>(() => {
     return (localStorage.getItem("theme") as Theme) || "system";
   });
+  const [sortOrder, setSortOrder] = useState<SortOrder>(() => {
+    const saved = localStorage.getItem("sortOrder") as SortOrder | null;
+    return saved && SORT_ORDERS.includes(saved) ? saved : "time-desc";
+  });
   const listRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -50,12 +96,36 @@ function App() {
   // entry content, so space-separated words act as an AND search.
   const filteredHistory = useMemo(() => {
     const terms = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
-    if (terms.length === 0) return history;
-    return history.filter((entry) => {
-      const content = entry.content.toLowerCase();
-      return terms.every((term) => content.includes(term));
-    });
-  }, [history, query]);
+    const matched =
+      terms.length === 0
+        ? history
+        : history.filter((entry) => {
+            const content = entry.content.toLowerCase();
+            return terms.every((term) => content.includes(term));
+          });
+
+    // Sorts the filtered entries by the current sort order (src/App.tsx).
+    // history from get_history() is already newest first, so "time-desc" needs
+    // no reordering; the other orders sort a copy to keep history untouched.
+    if (sortOrder === "time-desc") return matched;
+    const sorted = [...matched];
+    switch (sortOrder) {
+      case "time-asc":
+        sorted.reverse();
+        break;
+      case "content-asc":
+        sorted.sort((a, b) =>
+          a.content.localeCompare(b.content, undefined, { numeric: true })
+        );
+        break;
+      case "content-desc":
+        sorted.sort((a, b) =>
+          b.content.localeCompare(a.content, undefined, { numeric: true })
+        );
+        break;
+    }
+    return sorted;
+  }, [history, query, sortOrder]);
 
   useEffect(() => {
     localStorage.setItem("theme", theme);
@@ -65,6 +135,21 @@ function App() {
       document.body.setAttribute("data-theme", theme);
     }
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem("sortOrder", sortOrder);
+  }, [sortOrder]);
+
+  // Advances the sort button in src/App.tsx (settings row) to the next order,
+  // wrapping around, and moves the selection back to the top of the new order.
+  const cycleSort = () => {
+    setSortOrder((prev) => {
+      const nextIndex = (SORT_ORDERS.indexOf(prev) + 1) % SORT_ORDERS.length;
+      return SORT_ORDERS[nextIndex];
+    });
+    setSelectedIndex(0);
+    scrollToSelected(0);
+  };
 
   const cycleTheme = () => {
     const themes: Theme[] = ["system", "light", "dark"];
@@ -327,14 +412,23 @@ function App() {
             ? `${filteredHistory.length}件 / ${history.length}件`
             : `${history.length}/${maxEntries}件`}
         </span>
-        <button
-          className="clear-button"
-          onClick={handleClearAll}
-          disabled={history.length === 0}
-          title="全件クリア"
-        >
-          <Trash2 size={12} />
-        </button>
+        <div className="settings-actions">
+          <button
+            className="sort-button"
+            onClick={cycleSort}
+            title={`並び順: ${SORT_LABELS[sortOrder]}`}
+          >
+            <SortIcon order={sortOrder} />
+          </button>
+          <button
+            className="clear-button"
+            onClick={handleClearAll}
+            disabled={history.length === 0}
+            title="全件クリア"
+          >
+            <Trash2 size={12} />
+          </button>
+        </div>
       </div>
 
       <div className="history-list" ref={listRef}>
