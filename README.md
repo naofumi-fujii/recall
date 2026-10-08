@@ -10,7 +10,7 @@ A macOS menu bar clipboard history manager built with Tauri 2.
 - **Search**: Filter clipboard history with real-time search
 - **Theme Support**: System, Light, and Dark themes
 - **Auto Launch**: Option to start automatically at login
-- **Persistent Storage**: History saved in JSONL format (max 100 entries)
+- **Persistent Storage**: History saved in JSONL format (max 1000 entries)
 - **Duplicate Removal**: Automatically removes duplicates, keeping the most recent
 
 ## Installation
