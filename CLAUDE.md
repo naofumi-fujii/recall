@@ -55,5 +55,5 @@ cd src-tauri && cargo test            # Run Rust tests
 ### Important Behaviors
 - Window hides on focus loss (Spotlight-like)
 - Close button hides instead of quitting
-- History limited to 100 entries (pinned items preserved)
+- History limited to 1000 entries (pinned items preserved)
 - Double-tap Option key shows window at mouse cursor position
