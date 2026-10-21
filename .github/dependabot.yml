@@ -1,7 +1,22 @@
 version: 2
+
+# tauri build fails unless the tauri crate and @tauri-apps/api share the same
+# major/minor version, so update Tauri packages of both ecosystems in one PR
+multi-ecosystem-groups:
+  tauri:
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "07:00"
+      timezone: "Asia/Tokyo"
+
 updates:
   - package-ecosystem: "cargo"
     directory: "/src-tauri"
+    patterns:
+      - "tauri"
+      - "tauri-*"
+    multi-ecosystem-group: "tauri"
     schedule:
       interval: "weekly"
       day: "saturday"
@@ -15,6 +30,9 @@ updates:
 
   - package-ecosystem: "npm"
     directory: "/"
+    patterns:
+      - "@tauri-apps/*"
+    multi-ecosystem-group: "tauri"
     schedule:
       interval: "weekly"
       day: "saturday"
