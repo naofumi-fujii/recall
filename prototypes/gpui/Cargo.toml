@@ -1,0 +1,17 @@
+[package]
+name = "recall-gpui-prototype"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+gpui = { version = "0.2", default-features = false, features = ["font-kit", "runtime_shaders"] }
+tray-icon = "0.21"
+futures = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "6"
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSEvent", "NSResponder", "NSRunningApplication"] }
+block2 = "0.6"
+core-graphics = "0.25"
