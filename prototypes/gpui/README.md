@@ -27,15 +27,16 @@ Measured with `footprint` on macOS (Apple Silicon, release build, gpui 0.2.1).
 | State | GPUI prototype | Tauri (Recall 2.1.24) |
 |---|---|---|
 | Idle, window never opened | 12 MB | ~75-80 MB (recall 32 MB + WebKit helpers) |
-| Window open (50 entries) | 35-43 MB (peak 86 MB) | ~75-80 MB |
-| After the window was closed | 33-39 MB | ~75-80 MB (window is only hidden) |
+| Window open (50 entries) | 40-49 MB (peak 90-102 MB) | ~75-80 MB |
+| 20 s after the window was closed | 37-45 MB | ~75-80 MB (window is only hidden) |
 
+- GPUI values are the range over 3 runs.
 - Single process; no WebContent / GPU / Networking helper processes.
-- Memory is not returned after closing the window (GPU atlas, IOSurface, font caches, malloc), so the realistic steady state is ~35-40 MB, about half of the Tauri app.
+- Memory is not returned after closing the window (GPU atlas, IOSurface, font caches, malloc), so the realistic steady state is ~37-45 MB, about half of the Tauri app.
 
 ## Findings
 
-- Tray icon: GPUI has no tray API; `tray-icon` can be created alongside it on the main thread. Clicking the menu and the Option double-tap have not been verified manually yet.
+- Tray icon: GPUI has no tray API; `tray-icon` can be created alongside it on the main thread. The Show / Quit menu items and the Option double-tap were verified manually.
 - No Dock icon: GPUI forces `NSApplicationActivationPolicyRegular` on launch; overriding it with `setActivationPolicy(Accessory)` inside `Application::run` works.
 - Hide on focus loss: GPUI has no hide-window API, so the window is closed with `Window::remove_window` from `observe_window_activation` and recreated on the next show.
 - Window placement: `WindowBounds` are relative to the display passed in `display_id`, so the mouse position from `CGEvent` has to be converted to display-local coordinates.
